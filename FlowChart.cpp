@@ -5,7 +5,7 @@
 #include "FlowChart.h"
 
 #define MAX_LOADSTRING 100
-
+//Test git signing
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
