@@ -10,8 +10,10 @@
 #define IDI_FLOWCHART                   107
 #define IDI_SMALL                       108
 #define IDC_FLOWCHART                   109
-#define IDC_FLOWCHART_CHILD             110
-#define IDC_FLOWCHARTCHILD              110
+#define IDC_FLOWCHLFT                   110
+#define IDS_STRING104                   110
+#define IDC_FLOWCHRGHT                  111
+#define IDS_STRING111                   111
 #define IDR_MAINFRAME                   128
 #define ID_ABOUT_TEST                   32771
 #define ID_ACCELERATOR32772             32772

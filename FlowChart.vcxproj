@@ -127,17 +127,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Classes.h" />
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="FlowChart.h" />
+    <ClInclude Include="FlowChartDriver.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="LeftInfo.h" />
     <ClInclude Include="Node.h" />
+    <ClInclude Include="NodeInfo.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ErrorHandler.cpp" />
+    <ClCompile Include="FlowChartDriver.cpp" />
+    <ClCompile Include="LeftInfo.cpp" />
     <ClCompile Include="FlowChart.cpp" />
-    <ClCompile Include="LeftInfoPanel.cpp" />
+    <ClCompile Include="NodeInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FlowChart.rc" />

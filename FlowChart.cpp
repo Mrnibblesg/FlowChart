@@ -1,184 +1,83 @@
-// FlowChart.cpp : Defines the entry point for the application.
-//
-
-#include "framework.h"
 #include "FlowChart.h"
-#include <windowsx.h>
-#include <iostream>
-#include <stdio.h>
+#include "NodeInfo.h"
+#include "LeftInfo.h"
+#include "resource.h"
+#include "Classes.h"
 #include "ErrorHandler.h"
+#include <windowsx.h>
 
-#define ID_FIRSTCHILD 200
+INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
+BOOL resizeChildProc(HWND, LPARAM);
+HINSTANCE hInst;
 
-#define MAX_LOADSTRING 100
-// Global Variables:
-HINSTANCE hInst;                                // current instance
-WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
-WCHAR szChildWindowClass[MAX_LOADSTRING];       // the child class within main window
+ATOM registerFlowChart(HINSTANCE hInstance) {
+    WNDCLASSEX wcex;
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = FlowChartProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FLOWCHART));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = MAKEINTRESOURCE(IDC_FLOWCHART);
+    wcex.lpszClassName = _T(MAINWINCLASS);
+    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
-ATOM                MyRegisterClass(HINSTANCE hInstance);
-ATOM                MyRegisterChildClass(HINSTANCE hInstance);
+    return RegisterClassEx(&wcex); //Register window with the OS
+}
 
-BOOL                InitInstance(HINSTANCE, int);
-LRESULT CALLBACK    MainWndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK       EnumChildProc(HWND, LPARAM);
+//   FUNCTION: InitInstance(HINSTANCE, int)
+//
+//   PURPOSE: Saves instance handle and creates main window
+BOOL InitFlowChart(HINSTANCE hInstance, int nCmdShow) {
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
-{
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
+    hInst = hInstance;
+    HWND hWnd = CreateWindow(
+        _T(MAINWINCLASS), _T(APPTITLE),
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        nullptr, nullptr, hInstance, nullptr);
 
-    // Initialize global strings
-    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadString(hInstance, IDC_FLOWCHART, szWindowClass, MAX_LOADSTRING);
-    LoadString(hInstance, IDC_FLOWCHART_CHILD, szChildWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
-    MyRegisterChildClass(hInstance);
 
-    // Perform application initialization:
-    if (!InitInstance (hInstance, nCmdShow))
+    if (!hWnd)
     {
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_FLOWCHART));
-
-    MSG msg;
-    BOOL msgRet;
-    // Main message loop:
-    while ((msgRet = GetMessage(&msg, nullptr, 0, 0)) != 0)
-    {
-        if (msgRet == -1) {
-            //some error has occurred.
-            break;
-        }
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }
-
-    return (int) msg.wParam;
+    ShowWindow(hWnd, nCmdShow);
+    UpdateWindow(hWnd);
+    return TRUE;
 }
 
 
-
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
-    WNDCLASSEX wcex;
-    wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = MainWndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FLOWCHART));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_FLOWCHART);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-    return RegisterClassEx(&wcex); //Register window with the OS
-}
-
-
-ATOM MyRegisterChildClass(HINSTANCE hInstance)
-{
-    WNDCLASSEX wcex;
-    wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = DefWindowProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FLOWCHART));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_FLOWCHART);
-    wcex.lpszClassName  = szChildWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-    return RegisterClassEx(&wcex); //Register window with the OS
-}
-
-
-//
-//   FUNCTION: InitInstance(HINSTANCE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
-   hInst = hInstance; // Store instance handle in our global variable
-
-   HWND hWnd = CreateWindow(
-       szWindowClass, szTitle,
-       WS_OVERLAPPEDWINDOW,
-       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-       nullptr, nullptr, hInstance, nullptr);
-
-
-   if (!hWnd)
-   {
-      return FALSE;
-   }
-
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
-   return TRUE;
-}
-
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
+//  FUNCTION: FlowChartProc(HWND, UINT, WPARAM, LPARAM)
 //
 //  PURPOSE: Processes messages for the main window.
-LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
     case WM_CREATE:
-        //Create child windows in the client area. Create 3. Each needs their own Proc func.
-        for (int i = 0; i < 2; i++) {
-            
-            HWND hWndChild = CreateWindowExW(0,
-                szChildWindowClass,
-                L"Child Window",
-                WS_CHILD | WS_BORDER,
-                0,0,50,100,
-                hWnd,
-                (HMENU)(int)(ID_FIRSTCHILD+i),
-                hInst,
-                NULL);
-            if (hWndChild == NULL) {
-                std::cerr << "ERROR!" << std::endl;
-                errorHandler((LPTSTR)_T("CreateWindowEx"));
-                
-            }
-        }
+        //Create child windows in the client area. Create 2.
+        createLeftInfo(hInst, hWnd);
+        createNodeInfo(hInst, hWnd);
         return 0;
-        break;
     case WM_SIZE:
+    {
         RECT rcClient;
         GetClientRect(hWnd, &rcClient);
-        EnumChildWindows(hWnd, EnumChildProc, (LPARAM)&rcClient);
-
+        EnumChildWindows(hWnd, resizeChildProc, (LPARAM)&rcClient);
         break;
+    }
+    case WM_GETMINMAXINFO:
+    {
+        MINMAXINFO* mmi = (MINMAXINFO*)lParam;
+        mmi->ptMinTrackSize.x = 500;
+        mmi->ptMinTrackSize.y = 300;
+        return 0;
+    }
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -221,28 +120,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 }
 
 
-BOOL CALLBACK EnumChildProc(HWND hwndChild, LPARAM lParam) {
-    LPRECT rcParent;
-    int i, idChild;
-
-    // Retrieve the child-window identifier. Use it to set the 
-    // position of the child window.
-
-    idChild = GetWindowLong(hwndChild, GWL_ID);
-
-    i = idChild - ID_FIRSTCHILD;
-
-    rcParent = (LPRECT)lParam;
-    MoveWindow(hwndChild,
-        (rcParent->right / 3) * i * 2, 0,
-        rcParent->right / 3,
-        rcParent->bottom,
-        true);
-    ShowWindow(hwndChild, SW_SHOW);
-    return true;
-}
-
-
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -261,4 +138,23 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+BOOL resizeChildProc(HWND hWndChild, LPARAM rect) {
+    LPRECT rcParent = (LPRECT)rect;
+    int windowId = GetWindowLong(hWndChild, GWL_ID);
+    
+    //Window sizes: left info: 1/5 screen, left
+    //node info: 1/5 screen, right
+    float width = max(rcParent->right / 5, 150);
+    if (windowId == ID_LEFTINFO) {
+        MoveWindow(hWndChild,
+            0, 0, width, rcParent->bottom, TRUE);
+    }
+    else if (windowId == ID_NODEINFO) {
+        MoveWindow(hWndChild,
+            rcParent->right-width, 0, width, rcParent->bottom, TRUE);
+    }
+    ShowWindow(hWndChild, SW_SHOW);
+    return TRUE;
 }
