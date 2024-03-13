@@ -144,6 +144,7 @@
     <ClCompile Include="LeftInfo.cpp" />
     <ClCompile Include="FlowChart.cpp" />
     <ClCompile Include="NodeInfo.cpp" />
+    <ClCompile Include="Node.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FlowChart.rc" />
