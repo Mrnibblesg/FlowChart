@@ -2,12 +2,18 @@
 #include "ErrorHandler.h"
 #include "Classes.h"
 #include "resource.h"
+#include <cmath>
+#include <sstream>
+#include <windowsx.h>
+
+LRESULT CALLBACK LeftInfoProc(HWND, UINT, WPARAM, LPARAM);
+void paintLeftInfo(HWND);
 
 ATOM registerLeftInfo(HINSTANCE hInst) {
     WNDCLASSEX wcex;
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.style = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc = DefWindowProc;
+    wcex.lpfnWndProc = LeftInfoProc;
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInst;
@@ -21,8 +27,20 @@ ATOM registerLeftInfo(HINSTANCE hInst) {
     return RegisterClassEx(&wcex);
 }
 
+LRESULT CALLBACK LeftInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    int resp;
+    switch (message) {
+    case WM_PAINT:
+        paintLeftInfo(hWnd);
+        break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
 void createLeftInfo(HINSTANCE hInst, HWND hParent) {
-    HWND hLeftInfo = CreateWindowExW(0,
+    HWND hLeftInfo = CreateWindowEx(0,
         _T(LEFTINFOCLASS),
         L"Info Window",
         WS_CHILD | WS_BORDER,
@@ -34,4 +52,44 @@ void createLeftInfo(HINSTANCE hInst, HWND hParent) {
     if (hLeftInfo == NULL) {
         errorHandler((LPTSTR)_T("CreateWindowEx"));
     }
+}
+
+void paintLeftInfo(HWND hWnd) {
+    TCHAR msg[] = _T("Hello World");
+    TCHAR title[] = _T("Test Title");
+
+    //Magic numbs for testing. Moving a string to a TCHAR is annoying as hell
+    std::wstringstream percentageStream;
+    percentageStream << _T("Complete: ") << std::round(36.0 / 100) << _T("%");
+
+    TCHAR description[] = _T("Description: This is a flowchart description. Use it to describe your flowchart, and what the end of the flowchart means.");
+    PAINTSTRUCT ps;
+    RECT area;
+    
+    GetClientRect(hWnd, &area);
+
+    HDC hdc = BeginPaint(hWnd, &ps);
+
+    HFONT font = CreateFont(30, 0, 0, 0, 400,
+        FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+        CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
+        TEXT("Calibri"));
+
+    SelectFont(hdc, font);
+    RECT textRect = area;
+    int padding = 30;
+    textRect.left += padding;
+    textRect.right -= padding;
+    textRect.top += padding;
+    textRect.bottom -= padding;
+    
+    //textRect.top += DrawTextEx(hdc, msg, -1, &textRect, DT_LEFT | DT_NOCLIP | DT_WORDBREAK, NULL);
+    textRect.top += DrawTextEx(hdc, title, -1, &textRect, DT_LEFT | DT_NOCLIP | DT_WORDBREAK, NULL);
+
+    textRect.top += DrawTextEx(hdc, (LPWSTR)percentageStream.str().c_str(), -1, &textRect, DT_LEFT | DT_NOCLIP | DT_WORDBREAK, NULL) * 2;
+
+    textRect.top += DrawTextEx(hdc, description, -1, &textRect, DT_LEFT | DT_NOCLIP | DT_WORDBREAK, NULL);
+
+
+    EndPaint(hWnd, &ps);
 }

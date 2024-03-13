@@ -5,9 +5,14 @@
 #include "Classes.h"
 #include "ErrorHandler.h"
 #include <windowsx.h>
+#include <iostream>
 
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 BOOL resizeChildProc(HWND, LPARAM);
+void getSizeContraint(LPARAM);
+void paint(HWND);
+LRESULT command(HWND, UINT, WPARAM, LPARAM);
+
 HINSTANCE hInst;
 
 ATOM registerFlowChart(HINSTANCE hInstance) {
@@ -21,7 +26,7 @@ ATOM registerFlowChart(HINSTANCE hInstance) {
     wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FLOWCHART));
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = MAKEINTRESOURCE(IDC_FLOWCHART);
+    wcex.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
     wcex.lpszClassName = _T(MAINWINCLASS);
     wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -59,56 +64,29 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 {
     switch (message)
     {
+    case WM_LBUTTONDOWN:
+    {
+
+    }
+    break;
     case WM_CREATE:
-        //Create child windows in the client area. Create 2.
         createLeftInfo(hInst, hWnd);
         createNodeInfo(hInst, hWnd);
         return 0;
-    case WM_SIZE:
-    {
+    case WM_SIZE: {
         RECT rcClient;
         GetClientRect(hWnd, &rcClient);
         EnumChildWindows(hWnd, resizeChildProc, (LPARAM)&rcClient);
         break;
     }
     case WM_GETMINMAXINFO:
-    {
-        MINMAXINFO* mmi = (MINMAXINFO*)lParam;
-        mmi->ptMinTrackSize.x = 500;
-        mmi->ptMinTrackSize.y = 300;
+        getSizeContraint(lParam);
         return 0;
-    }
     case WM_COMMAND:
-        {
-            int wmId = LOWORD(wParam);
-            // Parse the menu selections:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
-        }
+        command(hWnd, message, wParam, lParam);
         break;
     case WM_PAINT:
-        {
-            TCHAR msg[] = _T("Hello World!");
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-
-            HFONT font = CreateFont(48,0,0,0,400,
-                FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-                CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, 
-                TEXT("Calibri"));
-
-            SelectFont(hdc, font);
-            //SetWindowTextW(hWnd, _T("Joe mama"));
-            TextOut(hdc, 5, 5, msg, _tcslen(msg));
-
-            EndPaint(hWnd, &ps);
-        }
+        paint(hWnd);
         break;
     case WM_DESTROY:
         PostQuitMessage(0);
@@ -146,7 +124,7 @@ BOOL resizeChildProc(HWND hWndChild, LPARAM rect) {
     
     //Window sizes: left info: 1/5 screen, left
     //node info: 1/5 screen, right
-    float width = max(rcParent->right / 5, 150);
+    float width = max(rcParent->right / 5, 300);
     if (windowId == ID_LEFTINFO) {
         MoveWindow(hWndChild,
             0, 0, width, rcParent->bottom, TRUE);
@@ -157,4 +135,40 @@ BOOL resizeChildProc(HWND hWndChild, LPARAM rect) {
     }
     ShowWindow(hWndChild, SW_SHOW);
     return TRUE;
+}
+
+void getSizeContraint(LPARAM minMaxInfo) {
+    MINMAXINFO* mmi = (MINMAXINFO*)minMaxInfo;
+    mmi->ptMinTrackSize.x = 800;
+    mmi->ptMinTrackSize.y = 500;
+}
+
+void paint(HWND hWnd) {
+    TCHAR msg[] = _T("Hello World!");
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hWnd, &ps);
+
+    HFONT font = CreateFont(48, 0, 0, 0, 400,
+        FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+        CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
+        TEXT("Calibri"));
+
+    SelectFont(hdc, font);
+    //SetWindowTextW(hWnd, _T("Joe mama"));
+    TextOut(hdc, 5, 5, msg, _tcslen(msg));
+
+    EndPaint(hWnd, &ps);
+}
+
+LRESULT command(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    int wmId = LOWORD(wParam);
+    // Parse the menu selections:
+    switch (wmId)
+    {
+    case IDM_ABOUT:
+        DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+        break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
 }
