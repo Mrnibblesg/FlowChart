@@ -6,6 +6,7 @@
 #include "ErrorHandler.h"
 #include <windowsx.h>
 #include "Node.h"
+#include <cmath>
 #include <vector>
 
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
@@ -15,9 +16,11 @@ void paint(HWND);
 LRESULT command(HWND, UINT, WPARAM, LPARAM);
 void createNode(HWND, LPARAM);
 void drawCircle(const HDC&, const POINT&, int);
+Node* checkClickedNode(LPARAM);
 
 HINSTANCE hInst;
 std::vector<Node*> nodes;
+Node* selected = nullptr;
 
 ATOM registerFlowChart(HINSTANCE hInstance) {
     WNDCLASSEX wcex;
@@ -69,7 +72,7 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     switch (message)
     {
         //what is clicked?
-        //background click: nothing
+        //background click: deselect node
         //background click+drag: move background
         // background dbl click: create node
         //node click: focus node
@@ -78,7 +81,8 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
         //node rclick+drag to node: set as required to second node
     case WM_LBUTTONDOWN:
     {
-
+        checkClickedNode(lParam);
+        RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
     }
     break;
     case WM_LBUTTONDBLCLK:
@@ -135,7 +139,6 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
-
 LRESULT command(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     int wmId = LOWORD(wParam);
     // Parse the menu selections:
@@ -182,36 +185,42 @@ void paint(HWND hWnd) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
 
-    RECT rect;
-    GetClientRect(hWnd, &rect);
-    int circleRad = 15;
-    POINT circleCenter{rect.right/2, rect.bottom/2};
-
     HFONT font = CreateFont(48, 0, 0, 0, 400,
         FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
         CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
         TEXT("Calibri"));
-
+    
     SelectFont(hdc, font);
     TextOut(hdc, 5, 5, msg, _tcslen(msg));
 
     for (Node* n : nodes) {
-        POINT pos = n->getLoc();
-        drawCircle(hdc, pos, circleRad);
+        POINT pos = n->getPos();
+        HGDIOBJ orig = SelectObject(hdc, GetStockObject(DC_PEN));
+        HBRUSH selectBrush = CreateSolidBrush(RGB(255,255,0));
+        HBRUSH deselectBrush = CreateSolidBrush(RGB(255,255,255));
+        
+        
+        if (n == selected) {
+            SelectObject(hdc, selectBrush);
+            drawCircle(hdc, pos, n->getRadius());
+            SelectObject(hdc, deselectBrush);
+        }
+        else {
+            drawCircle(hdc, pos, n->getRadius());
+        }
     }
     
-
     EndPaint(hWnd, &ps);
 }
 
 void createNode(HWND hWnd, LPARAM lParam) {
-    
     POINT p{
         GET_X_LPARAM(lParam),
         GET_Y_LPARAM(lParam)
     };
-    
-    nodes.push_back(new Node(p));
+    Node* newNode = new Node(p);
+    nodes.push_back(newNode);
+    selected = newNode;
     RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
 }
 
@@ -220,4 +229,27 @@ void drawCircle(const HDC& hdc, const POINT& center, int radius) {
         center.y - radius,
         center.x + radius,
         center.y + radius);
+}
+
+//returns a pointer to the node that was clicked. null if none were clicked.
+Node* checkClickedNode(LPARAM lParam) {
+    POINT click{
+    GET_X_LPARAM(lParam),
+    GET_Y_LPARAM(lParam)
+    };
+
+    for (int i = nodes.size() - 1; i >= 0; i--) {
+        Node* n = nodes.at(i);
+        POINT pos = n->getPos();
+        int rad = n->getRadius();
+        int dx = pos.x - click.x;
+        int dy = pos.y - click.y;
+
+        if (std::sqrt(dx * dx + dy * dy) < rad) {
+            selected = n;
+            return n;
+        }
+    }
+    selected = nullptr;
+    return nullptr;
 }

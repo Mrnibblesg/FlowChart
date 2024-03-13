@@ -2,9 +2,11 @@
 
 Node::Node() {
 	pos = {0,0};
+	radius = 30;
 }
 Node::Node(POINT p) {
 	pos = p;
+	radius = 30;
 }
 
 //Set to true when all reqs are fulfilled, otherwise don't.
@@ -76,6 +78,10 @@ int Node::fulfillExists(Node* n) {
 	return -1;
 }
 
-const POINT& Node::getLoc() const {
+const POINT& Node::getPos() const {
 	return pos;
+}
+
+int Node::getRadius() const {
+	return radius;
 }

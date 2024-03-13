@@ -11,13 +11,15 @@ public:
 	bool areReqsFilled();
 	void addReq(Node*);
 	void removeReq(Node*);
-	const POINT& getLoc() const;
+	const POINT& getPos() const;
+	int getRadius() const;
 
 private:
 	
 	std::string name = "";
 	std::string desc = "";
 	POINT pos;
+	int radius;
 	bool complete = false;
 	std::vector<Node*> required; //Required to be fulfilled for this node to be completed
 	std::vector<Node*> fulfills; //Nodes that this node fulfills
