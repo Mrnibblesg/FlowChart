@@ -14,6 +14,11 @@ public:
 	const POINT& getPos() const;
 	int getRadius() const;
 
+	std::string getName() const;
+	std::string getDesc() const;
+	void setName(std::string);
+	void setDesc(std::string);
+
 private:
 	
 	std::string name = "";

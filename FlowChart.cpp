@@ -9,6 +9,8 @@
 #include <cmath>
 #include <vector>
 
+#define WM_UPDATESELECTION (WM_USER+0)
+
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 BOOL resizeChildProc(HWND, LPARAM);
 void getSizeContraint(LPARAM);
@@ -21,6 +23,8 @@ Node* checkClickedNode(LPARAM);
 HINSTANCE hInst;
 std::vector<Node*> nodes;
 Node* selected = nullptr;
+
+HWND hNodeInfo = nullptr;
 
 ATOM registerFlowChart(HINSTANCE hInstance) {
     WNDCLASSEX wcex;
@@ -72,13 +76,16 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     switch (message)
     {
         //what is clicked?
-        //background click: deselect node
         //background click+drag: move background
-        // background dbl click: create node
-        //node click: focus node
         //node click+drag: move node
         //node rclick: nothing
         //node rclick+drag to node: set as required to second node
+    case WM_RBUTTONDOWN:
+
+        break;
+    case WM_RBUTTONUP:
+
+        break;
     case WM_LBUTTONDOWN:
     {
         checkClickedNode(lParam);
@@ -92,7 +99,7 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     break;
     case WM_CREATE:
         createLeftInfo(hInst, hWnd);
-        createNodeInfo(hInst, hWnd);
+        hNodeInfo = createNodeInfo(hInst, hWnd);
         return 0;
     case WM_SIZE: {
         RECT rcClient;
@@ -180,18 +187,15 @@ void getSizeContraint(LPARAM minMaxInfo) {
 
 //Every node, and all of their connections.
 void paint(HWND hWnd) {
-    
-    TCHAR msg[] = _T("Hello World!");
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
-
+    
     HFONT font = CreateFont(48, 0, 0, 0, 400,
         FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
         CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
         TEXT("Calibri"));
-    
+
     SelectFont(hdc, font);
-    TextOut(hdc, 5, 5, msg, _tcslen(msg));
 
     for (Node* n : nodes) {
         POINT pos = n->getPos();
@@ -237,6 +241,7 @@ Node* checkClickedNode(LPARAM lParam) {
     GET_X_LPARAM(lParam),
     GET_Y_LPARAM(lParam)
     };
+    selected = nullptr;
 
     for (int i = nodes.size() - 1; i >= 0; i--) {
         Node* n = nodes.at(i);
@@ -247,9 +252,10 @@ Node* checkClickedNode(LPARAM lParam) {
 
         if (std::sqrt(dx * dx + dy * dy) < rad) {
             selected = n;
-            return n;
+            break;
         }
     }
-    selected = nullptr;
-    return nullptr;
+
+    SendMessage(hNodeInfo, WM_UPDATESELECTION, 0, (LPARAM)selected);
+    return selected;
 }

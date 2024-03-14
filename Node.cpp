@@ -85,3 +85,16 @@ const POINT& Node::getPos() const {
 int Node::getRadius() const {
 	return radius;
 }
+
+std::string Node::getName() const {
+	return name;
+}
+std::string Node::getDesc() const {
+	return desc;
+}
+ void Node::setName(std::string s) {
+	 name = s;
+}
+ void Node::setDesc(std::string s) {
+	 desc = s;
+}

@@ -56,26 +56,28 @@ void createLeftInfo(HINSTANCE hInst, HWND hParent) {
 
 void paintLeftInfo(HWND hWnd) {
     TCHAR msg[] = _T("Hello World");
-    TCHAR title[] = _T("Test Title");
+    TCHAR title[] = _T("Flowchart title");
 
     //Magic numbs for testing. Moving a string to a TCHAR is annoying as hell
     std::wstringstream percentageStream;
     percentageStream << _T("Complete: ") << std::round(36.0 / 100) << _T("%");
 
     TCHAR description[] = _T("Description: This is a flowchart description. Use it to describe your flowchart, and what the end of the flowchart means.");
-    PAINTSTRUCT ps;
-    RECT area;
     
-    GetClientRect(hWnd, &area);
 
+
+    PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
 
     HFONT font = CreateFont(30, 0, 0, 0, 400,
         FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
         CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
         TEXT("Calibri"));
-
     SelectFont(hdc, font);
+    
+    RECT area;
+    GetClientRect(hWnd, &area);
+
     RECT textRect = area;
     int padding = 30;
     textRect.left += padding;
@@ -83,7 +85,6 @@ void paintLeftInfo(HWND hWnd) {
     textRect.top += padding;
     textRect.bottom -= padding;
     
-    //textRect.top += DrawTextEx(hdc, msg, -1, &textRect, DT_LEFT | DT_NOCLIP | DT_WORDBREAK, NULL);
     textRect.top += DrawTextEx(hdc, title, -1, &textRect, DT_LEFT | DT_NOCLIP | DT_WORDBREAK, NULL);
 
     textRect.top += DrawTextEx(hdc, (LPWSTR)percentageStream.str().c_str(), -1, &textRect, DT_LEFT | DT_NOCLIP | DT_WORDBREAK, NULL) * 2;
