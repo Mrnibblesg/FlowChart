@@ -8,6 +8,7 @@
 #include "Node.h"
 #include <cmath>
 #include <vector>
+#include "FCState.h"
 
 #define WM_UPDATESELECTION (WM_USER+0)
 
@@ -21,8 +22,6 @@ void drawCircle(const HDC&, const POINT&, int);
 Node* checkClickedNode(LPARAM);
 
 HINSTANCE hInst;
-std::vector<Node*> nodes;
-Node* selected = nullptr;
 
 HWND hNodeInfo = nullptr;
 
@@ -197,14 +196,14 @@ void paint(HWND hWnd) {
 
     SelectFont(hdc, font);
 
-    for (Node* n : nodes) {
+    for (Node* n : FCState::nodes) {
         POINT pos = n->getPos();
         HGDIOBJ orig = SelectObject(hdc, GetStockObject(DC_PEN));
         HBRUSH selectBrush = CreateSolidBrush(RGB(255,255,0));
         HBRUSH deselectBrush = CreateSolidBrush(RGB(255,255,255));
         
         
-        if (n == selected) {
+        if (n == FCState::selected) {
             SelectObject(hdc, selectBrush);
             drawCircle(hdc, pos, n->getRadius());
             SelectObject(hdc, deselectBrush);
@@ -223,8 +222,8 @@ void createNode(HWND hWnd, LPARAM lParam) {
         GET_Y_LPARAM(lParam)
     };
     Node* newNode = new Node(p);
-    nodes.push_back(newNode);
-    selected = newNode;
+    FCState::nodes.push_back(newNode);
+    FCState::selected = newNode;
     RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
 }
 
@@ -241,21 +240,21 @@ Node* checkClickedNode(LPARAM lParam) {
     GET_X_LPARAM(lParam),
     GET_Y_LPARAM(lParam)
     };
-    selected = nullptr;
+    FCState::selected = nullptr;
 
-    for (int i = nodes.size() - 1; i >= 0; i--) {
-        Node* n = nodes.at(i);
+    for (int i = FCState::nodes.size() - 1; i >= 0; i--) {
+        Node* n = FCState::nodes.at(i);
         POINT pos = n->getPos();
         int rad = n->getRadius();
         int dx = pos.x - click.x;
         int dy = pos.y - click.y;
 
         if (std::sqrt(dx * dx + dy * dy) < rad) {
-            selected = n;
+            FCState::selected = n;
             break;
         }
     }
 
-    SendMessage(hNodeInfo, WM_UPDATESELECTION, 0, (LPARAM)selected);
-    return selected;
+    SendMessage(hNodeInfo, WM_UPDATESELECTION, 0, (LPARAM)FCState::selected);
+    return FCState::selected;
 }

@@ -132,6 +132,7 @@
     <ClInclude Include="FlowChart.h" />
     <ClInclude Include="FlowChartDriver.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="FCState.h" />
     <ClInclude Include="LeftInfo.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="NodeInfo.h" />
@@ -140,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ErrorHandler.cpp" />
+    <ClCompile Include="FCState.cpp" />
     <ClCompile Include="FlowChartDriver.cpp" />
     <ClCompile Include="LeftInfo.cpp" />
     <ClCompile Include="FlowChart.cpp" />

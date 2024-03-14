@@ -4,11 +4,12 @@
 #include "resource.h"
 #include "windowsx.h"
 #include "Node.h"
+#include "FCState.h"
 
 #define WM_UPDATESELECTION (WM_USER+0)
 
 LRESULT CALLBACK NodeInfoProc(HWND, UINT, WPARAM, LPARAM);
-void nodeInfoPaint(HWND, Node*);
+void nodeInfoPaint(HWND);
 void setSelected(Node*);
 
 ATOM registerNodeInfo(HINSTANCE hInst) {
@@ -33,8 +34,9 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	switch (message) {
 	case WM_UPDATESELECTION:
 		//make it so this window redraws. Currently RedrawWindow doesn't seem to work.
+		RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
 	case WM_PAINT:
-		nodeInfoPaint(hWnd, (Node*)lParam);
+		nodeInfoPaint(hWnd);
 	break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -42,7 +44,7 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void nodeInfoPaint(HWND hWnd, Node* n) {
+void nodeInfoPaint(HWND hWnd) {
 
 	PAINTSTRUCT ps;
 	HDC hdc = BeginPaint(hWnd, &ps);
@@ -66,11 +68,11 @@ void nodeInfoPaint(HWND hWnd, Node* n) {
 
 	DWORD form = DT_LEFT | DT_NOCLIP | DT_WORDBREAK;
 
-	if (n == nullptr) {
-		textRect.top -= DrawTextEx(hdc, (TCHAR*) _T("None selected"), -1, &textRect, form, NULL);
+	if (FCState::selected == nullptr) {
+		textRect.top += DrawTextEx(hdc, (TCHAR*) _T("None selected"), -1, &textRect, form, NULL);
 	}
 	else {
-		textRect.top -= DrawTextEx(hdc, (TCHAR*)n->getName().c_str(), -1, &textRect, form, NULL);
+		textRect.top += DrawTextEx(hdc, (TCHAR*)FCState::selected->getName().c_str(), -1, &textRect, form, NULL);
 	}
 
 	EndPaint(hWnd, &ps);
