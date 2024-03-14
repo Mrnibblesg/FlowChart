@@ -45,7 +45,7 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 }
 
 void nodeInfoPaint(HWND hWnd) {
-
+	Node* selected = FCState::selected;
 	PAINTSTRUCT ps;
 	HDC hdc = BeginPaint(hWnd, &ps);
 
@@ -68,11 +68,27 @@ void nodeInfoPaint(HWND hWnd) {
 
 	DWORD form = DT_LEFT | DT_NOCLIP | DT_WORDBREAK;
 
-	if (FCState::selected == nullptr) {
+	if (selected == nullptr) {
 		textRect.top += DrawTextEx(hdc, (TCHAR*) _T("None selected"), -1, &textRect, form, NULL);
 	}
 	else {
-		textRect.top += DrawTextEx(hdc, (TCHAR*)FCState::selected->getName().c_str(), -1, &textRect, form, NULL);
+		//I really gotta turn the text draw into a function this is ridiculous
+		textRect.top += DrawTextEx(hdc, (TCHAR*)_T("Name:"), -1, &textRect, form, NULL);
+		textRect.top += DrawTextEx(hdc, (TCHAR*)selected->getName().c_str(), -1, &textRect, form, NULL) + 30;
+		textRect.top += DrawTextEx(hdc, (TCHAR*)_T("Description:"), -1, &textRect, form, NULL);
+		textRect.top += DrawTextEx(hdc, (TCHAR*)selected->getDesc().c_str(), -1, &textRect, form, NULL) + 30;
+		if (selected->getReqs().size() != 0) {
+			textRect.top += DrawTextEx(hdc, (TCHAR*)_T("Requirements:"), -1, &textRect, form, NULL);
+			for (Node* n : selected->getReqs()) {
+				textRect.top += DrawTextEx(hdc, (TCHAR*)n->getName().c_str(), -1, &textRect, form, NULL);
+			}
+		}
+		if (selected->getFulfills().size() != 0) {
+			textRect.top += DrawTextEx(hdc, (TCHAR*)_T("Fulfills:"), -1, &textRect, form, NULL);
+			for (Node* n : selected->getFulfills()) {
+				textRect.top += DrawTextEx(hdc, (TCHAR*)n->getName().c_str(), -1, &textRect, form, NULL);
+			}
+		}
 	}
 
 	EndPaint(hWnd, &ps);

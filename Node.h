@@ -19,6 +19,9 @@ public:
 	void setName(std::string);
 	void setDesc(std::string);
 
+	const std::vector<Node*>& getReqs() const;
+	const std::vector<Node*>& getFulfills() const;
+
 private:
 	
 	std::string name = "";

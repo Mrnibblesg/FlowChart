@@ -98,3 +98,10 @@ std::string Node::getDesc() const {
  void Node::setDesc(std::string s) {
 	 desc = s;
 }
+
+ const std::vector<Node*>& Node::getReqs() const {
+	 return required;
+ }
+ const std::vector<Node*>& Node::getFulfills() const {
+	 return fulfills;
+ }
