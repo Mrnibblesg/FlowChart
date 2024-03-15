@@ -51,7 +51,7 @@ BOOL InitFlowChart(HINSTANCE hInstance, int nCmdShow) {
     hInst = hInstance;
     HWND hWnd = CreateWindow(
         _T(MAINWINCLASS), _T(APPTITLE),
-        WS_OVERLAPPEDWINDOW,
+        WS_OVERLAPPEDWINDOW | WS_BORDER,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         nullptr, nullptr, hInstance, nullptr);
 

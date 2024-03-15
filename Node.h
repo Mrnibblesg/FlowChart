@@ -14,18 +14,18 @@ public:
 	const POINT& getPos() const;
 	int getRadius() const;
 
-	std::string getName() const;
-	std::string getDesc() const;
-	void setName(std::string);
-	void setDesc(std::string);
+	std::wstring getName() const;
+	std::wstring getDesc() const;
+	void setName(std::wstring);
+	void setDesc(std::wstring);
 
 	const std::vector<Node*>& getReqs() const;
 	const std::vector<Node*>& getFulfills() const;
 
 private:
 	
-	std::string name = "";
-	std::string desc = "";
+	std::wstring name = L"";
+	std::wstring desc = L"";
 	POINT pos;
 	int radius;
 	bool complete = false;

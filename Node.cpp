@@ -7,6 +7,8 @@ Node::Node() {
 Node::Node(POINT p) {
 	pos = p;
 	radius = 30;
+	name = L"Test Node Name";
+	desc = L"Super duper long test node description to test the line-wrapping and height calculation capabilities.";
 }
 
 //Set to true when all reqs are fulfilled, otherwise don't.
@@ -86,16 +88,16 @@ int Node::getRadius() const {
 	return radius;
 }
 
-std::string Node::getName() const {
+std::wstring Node::getName() const {
 	return name;
 }
-std::string Node::getDesc() const {
+std::wstring Node::getDesc() const {
 	return desc;
 }
- void Node::setName(std::string s) {
+ void Node::setName(std::wstring s) {
 	 name = s;
 }
- void Node::setDesc(std::string s) {
+ void Node::setDesc(std::wstring s) {
 	 desc = s;
 }
 
