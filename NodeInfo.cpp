@@ -13,6 +13,7 @@
 LRESULT CALLBACK NodeInfoProc(HWND, UINT, WPARAM, LPARAM);
 void nodeInfoPaint(HWND);
 void setSelected(Node*);
+void drawLines(HDC, std::wstring, RECT&);
 
 HWND editButton = nullptr;
 HWND editName = nullptr;
@@ -82,7 +83,7 @@ void nodeInfoPaint(HWND hWnd) {
 
 	//magic number which represents the padding inside an edit control box
 	const int inPad = 8;
-
+	const int lineSize = 30;
 	RECT textRect = area;
 
 	//my own padding for inside the node info box
@@ -94,8 +95,6 @@ void nodeInfoPaint(HWND hWnd) {
 
 	int textWidth = textRect.right - textRect.left;
 
-	DWORD form = DT_LEFT | DT_NOCLIP | DT_WORDBREAK;
-
 	if (selected == nullptr) {
 		ShowWindow(editButton, SW_HIDE);
 		ShowWindow(editName, SW_HIDE);
@@ -104,16 +103,12 @@ void nodeInfoPaint(HWND hWnd) {
 		Edit_Enable(editName, FALSE);
 		Edit_Enable(editDesc, FALSE);
 
-		textRect.top += DrawTextEx(hdc, (TCHAR*) _T("None selected"), -1, &textRect, form, NULL);
+		drawLines(hdc, L"None Selected", textRect);
 		EndPaint(hWnd, &ps);
 		return;
 	}
 
-	int amt;
-	if ((amt = DrawTextEx(hdc, (TCHAR*)_T("Name:"), -1, &textRect, form, NULL)) == 0) {
-		errorHandler((LPTSTR)L"DrawTextEx");
-	}
-	textRect.top += amt;
+	drawLines(hdc, L"Name:", textRect);
 
 
 	//to create the edit box properly, I need to know what text already exists
@@ -133,42 +128,57 @@ void nodeInfoPaint(HWND hWnd) {
 		int lines = std::ceil((float)textSize.cx / textWidth);
 		int boxHeight = lines * textSize.cy;
 
-		SetWindowPos(editName, NULL, textRect.left-inPad, textRect.top, textWidth + (2*inPad), boxHeight, SWP_NOZORDER);
+		SetWindowPos(editName, NULL,
+			textRect.left-inPad,
+			textRect.top,
+			textWidth + (2*inPad),
+			boxHeight,
+			SWP_NOZORDER);
+
 		Edit_SetText(editName, (LPTSTR)selected->getName().c_str());
+		textRect.top += lineSize + textSize.cy+textSize.cy;
 
-
-		textRect.top += textSize.cy+textSize.cy;
-		
 		//Set up the description edit control
-		textRect.top += DrawTextEx(hdc, (LPTSTR)_T("Description:"), -1, &textRect, form, NULL);
+		drawLines(hdc, L"Description:", textRect);
+		textRect.top -= lineSize;
+
 		GetTextExtentPoint(hdc, (LPTSTR)selected->getDesc().c_str(), _tcslen(selected->getDesc().c_str()), &textSize);
 		lines = std::ceil((float)textSize.cx / textWidth);
 		boxHeight = lines * textSize.cy;
 
-		SetWindowPos(editDesc, NULL, textRect.left - inPad, textRect.top-2, textWidth + (2 * inPad), boxHeight + (2*inPad), SWP_NOZORDER);
+		SetWindowPos(editDesc, NULL,
+			textRect.left - inPad,
+			textRect.top-2,
+			textWidth + (2 * inPad),
+			boxHeight + (2*inPad),
+			SWP_NOZORDER);
+
 		Edit_SetText(editDesc, (LPTSTR)selected->getDesc().c_str());
 		textRect.top += textSize.cy;
 		
-
 	}
 	else {
 		ShowWindow(editButton, SW_SHOW);
 		Button_Enable(editButton, TRUE);
-		//I really gotta turn the text draw into a function this is ridiculous
 		
-		textRect.top += DrawTextEx(hdc, (TCHAR*)selected->getName().c_str(), -1, &textRect, form, NULL) + 30;
-		textRect.top += DrawTextEx(hdc, (TCHAR*)_T("Description:"), -1, &textRect, form, NULL);
-		textRect.top += DrawTextEx(hdc, (TCHAR*)selected->getDesc().c_str(), -1, &textRect, form, NULL) + 30;
+		drawLines(hdc, selected->getName(), textRect);
+		textRect.top += lineSize;
+
+		drawLines(hdc, L"Description", textRect);
+
+		drawLines(hdc, selected->getDesc(), textRect);
+		textRect.top += lineSize;
+
 		if (selected->getReqs().size() != 0) {
-			textRect.top += DrawTextEx(hdc, (TCHAR*)_T("Requirements:"), -1, &textRect, form, NULL);
+			drawLines(hdc, L"Requirements:", textRect);
 			for (Node* n : selected->getReqs()) {
-				textRect.top += DrawTextEx(hdc, (TCHAR*)n->getName().c_str(), -1, &textRect, form, NULL);
+				drawLines(hdc, n->getName(), textRect);
 			}
 		}
 		if (selected->getFulfills().size() != 0) {
-			textRect.top += DrawTextEx(hdc, (TCHAR*)_T("Fulfills:"), -1, &textRect, form, NULL);
+			drawLines(hdc, L"Fulfills:", textRect);
 			for (Node* n : selected->getFulfills()) {
-				textRect.top += DrawTextEx(hdc, (TCHAR*)n->getName().c_str(), -1, &textRect, form, NULL);
+				drawLines(hdc, n->getName(), textRect);
 			}
 		}
 	}
@@ -232,4 +242,9 @@ HWND createNodeInfo(HINSTANCE hInst, HWND hParent) {
 	SendMessage(editDesc, WM_SETFONT, (WPARAM)FONT, NULL);
 
 	return hNodeInfo;
+}
+
+void drawLines(HDC hdc, std::wstring text, RECT& textRect) {
+	DWORD form = DT_LEFT | DT_NOCLIP | DT_WORDBREAK;
+	textRect.top += DrawTextEx(hdc, (LPTSTR)text.c_str(), -1, &textRect, form, NULL);
 }
