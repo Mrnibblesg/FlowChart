@@ -14,10 +14,17 @@ LRESULT CALLBACK NodeInfoProc(HWND, UINT, WPARAM, LPARAM);
 void nodeInfoPaint(HWND);
 void setSelected(Node*);
 void drawLines(HDC, std::wstring, RECT&);
+void updateNodeFields(HWND, LONG);
+std::wstring windowTextToStr(HWND);
 
 HWND editButton = nullptr;
+
 HWND editName = nullptr;
+LONG editNameId = 1;
+
 HWND editDesc = nullptr;
+LONG editDescId = 2;
+
 HWND markComplete = nullptr;
 bool editing = false;
 
@@ -47,7 +54,6 @@ ATOM registerNodeInfo(HINSTANCE hInst) {
 LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	switch (message) {
 	case WM_UPDATESELECTION:
-		RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
 		editing = false;
 	case WM_PAINT:
 		nodeInfoPaint(hWnd);
@@ -60,8 +66,15 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			
 			RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
 			editing = !editing;
-			//edit text boxes!
+			Edit_SetText(editName, (LPTSTR)FCState::selected->getName().c_str());
+			Edit_SetText(editDesc, (LPTSTR)FCState::selected->getDesc().c_str());
+			
 			break;
+		case EN_CHANGE:
+		{
+			updateNodeFields(hWnd, LOWORD(wParam));
+			break;
+		}
 		}
 	}
 		break;
@@ -81,7 +94,7 @@ void nodeInfoPaint(HWND hWnd) {
 	RECT area;
 	GetClientRect(hWnd, &area);
 
-	//magic number which represents the padding inside an edit control box
+	//magic number which represents the padding inside an edit control box. Used for alignment
 	const int inPad = 8;
 	const int lineSize = 30;
 	RECT textRect = area;
@@ -108,11 +121,11 @@ void nodeInfoPaint(HWND hWnd) {
 		return;
 	}
 
+	int nameSpot = textRect.top;
+	int descSpot;
 	drawLines(hdc, L"Name:", textRect);
 
-
-	//to create the edit box properly, I need to know what text already exists
-
+	// TODO remake this section later to only use the textbox and simply set the border visibility.
 	if (editing){
 		ShowWindow(editName, SW_SHOW);
 		ShowWindow(editDesc, SW_SHOW);
@@ -123,48 +136,57 @@ void nodeInfoPaint(HWND hWnd) {
 		RECT rect;
 		GetClientRect(hWnd, &rect);
 
-		//Set the name edit control
+		//Set props of the name edit control
 		GetTextExtentPoint(hdc, (LPTSTR)selected->getName().c_str(), _tcslen(selected->getName().c_str()), &textSize);
-		int lines = std::ceil((float)textSize.cx / textWidth);
-		int boxHeight = lines * textSize.cy;
+		int lines = std::ceil((float)textSize.cx / (textWidth-3));
+		int boxHeight = lineSize * Edit_GetLineCount(editName);
 
+		//set edit control size and adjust remaining space
 		SetWindowPos(editName, NULL,
 			textRect.left-inPad,
-			textRect.top,
+			textRect.top - 2,
 			textWidth + (2*inPad),
-			boxHeight,
+			boxHeight + (inPad),
 			SWP_NOZORDER);
 
-		Edit_SetText(editName, (LPTSTR)selected->getName().c_str());
-		textRect.top += lineSize + textSize.cy+textSize.cy;
+		textRect.top += boxHeight + lineSize;
 
-		//Set up the description edit control
+		//Set up the description edit control.
+		descSpot = textRect.top;
 		drawLines(hdc, L"Description:", textRect);
-		textRect.top -= lineSize;
 
+		//setEditControlHeight
 		GetTextExtentPoint(hdc, (LPTSTR)selected->getDesc().c_str(), _tcslen(selected->getDesc().c_str()), &textSize);
 		lines = std::ceil((float)textSize.cx / textWidth);
-		boxHeight = lines * textSize.cy;
+		boxHeight = lineSize * Edit_GetLineCount(editDesc);
 
 		SetWindowPos(editDesc, NULL,
 			textRect.left - inPad,
 			textRect.top-2,
-			textWidth + (2 * inPad),
-			boxHeight + (2*inPad),
+			textWidth + (2*inPad),
+			boxHeight + (inPad),
 			SWP_NOZORDER);
 
-		Edit_SetText(editDesc, (LPTSTR)selected->getDesc().c_str());
-		textRect.top += textSize.cy;
+		//Go back and redraw these lines because edit controls inexplicably overwrite them sometimes
+		int textReturnSpot = textRect.top;
+
+		textRect.top = nameSpot;
+		drawLines(hdc, L"Name:", textRect);
+
+		textRect.top = descSpot;
+		drawLines(hdc, L"Description:", textRect);
 		
+		textRect.top = textReturnSpot;
+		textRect.top += boxHeight + lineSize;
 	}
 	else {
+		//not editing, just draw
 		ShowWindow(editButton, SW_SHOW);
 		Button_Enable(editButton, TRUE);
 		
 		drawLines(hdc, selected->getName(), textRect);
 		textRect.top += lineSize;
-
-		drawLines(hdc, L"Description", textRect);
+		drawLines(hdc, L"Description:", textRect);
 
 		drawLines(hdc, selected->getDesc(), textRect);
 		textRect.top += lineSize;
@@ -237,6 +259,8 @@ HWND createNodeInfo(HINSTANCE hInst, HWND hParent) {
 		hInst,
 		NULL
 	);
+	SetWindowLong(editName, GWL_ID, editNameId);
+	SetWindowLong(editDesc, GWL_ID, editDescId);
 
 	SendMessage(editName, WM_SETFONT, (WPARAM)FONT, NULL);
 	SendMessage(editDesc, WM_SETFONT, (WPARAM)FONT, NULL);
@@ -247,4 +271,28 @@ HWND createNodeInfo(HINSTANCE hInst, HWND hParent) {
 void drawLines(HDC hdc, std::wstring text, RECT& textRect) {
 	DWORD form = DT_LEFT | DT_NOCLIP | DT_WORDBREAK;
 	textRect.top += DrawTextEx(hdc, (LPTSTR)text.c_str(), -1, &textRect, form, NULL);
+}
+void updateNodeFields(HWND hWnd, LONG id){
+	if (id == GetWindowLong(editName, GWL_ID)) {
+		FCState::selected->setName(windowTextToStr(editName));
+	}
+	else if (id == GetWindowLong(editDesc, GWL_ID)) {
+		FCState::selected->setName(windowTextToStr(editDesc));
+	}
+	else {
+		MessageBoxW(NULL, L"updateNodeFields: unknown ID", L"Error", MB_YESNO);
+		return;
+	}
+	InvalidateRect(hWnd, NULL, TRUE);
+	RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+}
+
+std::wstring windowTextToStr(HWND hWnd) {
+	TCHAR buf[4096];
+	GetWindowText(hWnd, buf, 4096);
+	std::wstring str;
+	for (TCHAR c : buf) {
+		str += c;
+	}
+	return str;
 }
