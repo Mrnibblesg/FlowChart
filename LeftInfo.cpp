@@ -6,8 +6,14 @@
 #include <sstream>
 #include <windowsx.h>
 
+
 LRESULT CALLBACK LeftInfoProc(HWND, UINT, WPARAM, LPARAM);
 void paintLeftInfo(HWND);
+
+const HFONT FONT = CreateFont(30, 0, 0, 0, 400,
+    FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+    CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
+    TEXT("Calibri"));
 
 ATOM registerLeftInfo(HINSTANCE hInst) {
     WNDCLASSEX wcex;
@@ -52,6 +58,8 @@ void createLeftInfo(HINSTANCE hInst, HWND hParent) {
     if (hLeftInfo == NULL) {
         errorHandler((LPTSTR)_T("CreateWindowEx"));
     }
+    
+    SendMessage(hLeftInfo, WM_SETFONT, (WPARAM)FONT, NULL);
 }
 
 void paintLeftInfo(HWND hWnd) {
@@ -69,11 +77,8 @@ void paintLeftInfo(HWND hWnd) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
 
-    HFONT font = CreateFont(30, 0, 0, 0, 400,
-        FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-        CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
-        TEXT("Calibri"));
-    SelectFont(hdc, font);
+
+    SelectFont(hdc, FONT);
     
     RECT area;
     GetClientRect(hWnd, &area);

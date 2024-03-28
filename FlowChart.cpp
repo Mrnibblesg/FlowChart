@@ -20,6 +20,19 @@ LRESULT command(HWND, UINT, WPARAM, LPARAM);
 void createNode(HWND, LPARAM);
 void drawCircle(const HDC&, const POINT&, int);
 Node* checkClickedNode(LPARAM);
+void drawArrow(const HDC&, const Node&, const Node&);
+
+
+const HFONT FONT = CreateFont(48, 0, 0, 0, 400,
+    FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+    CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
+    TEXT("Calibri"));
+
+const HBRUSH deselected = CreateSolidBrush(RGB(255, 255, 255));
+const HBRUSH selected = CreateSolidBrush(RGB(255, 255, 0));
+const HBRUSH complete = CreateSolidBrush(RGB(0, 255, 0));
+const HBRUSH completeSelected = CreateSolidBrush(RGB(43, 121, 255));
+
 
 HINSTANCE hInst;
 
@@ -74,21 +87,68 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 {
     switch (message)
     {
-        //what is clicked?
-        //background click+drag: move background
-        //node click+drag: move node
-        //node rclick: nothing
-        //node rclick+drag to node: set as required to second node
     case WM_RBUTTONDOWN:
-
+    {
+        Node* rightClicked = checkClickedNode(lParam);
+        if (rightClicked != nullptr) {
+            FCState::connectBegin = rightClicked;
+            FCState::selected = rightClicked;
+            RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+        }
+    }
         break;
     case WM_RBUTTONUP:
+    {
+        Node* rightClicked = checkClickedNode(lParam);
+        if (rightClicked != nullptr &&
+            FCState::connectBegin != nullptr &&
+            rightClicked != FCState::connectBegin) {
 
+            rightClicked->addReq(FCState::connectBegin);
+            FCState::selected = rightClicked;
+            RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+        }
+        FCState::connectBegin = nullptr;
+    }   
         break;
     case WM_LBUTTONDOWN:
     {
+        FCState::lButtonDown = true;
         checkClickedNode(lParam);
-        RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
+        InvalidateRect(hWnd, NULL, TRUE);
+    }
+    break;
+    case WM_MOUSEMOVE:
+    {
+        if (FCState::lButtonDown) {
+            Node* selected = FCState::selected;
+            if (selected != nullptr) {
+                int nx = selected->getPos().x;
+                int ny = selected->getPos().y;
+                int x = GET_X_LPARAM(lParam);
+                int y = GET_Y_LPARAM(lParam);
+                int rad = selected->getRadius()+1;
+
+                RECT redraw;
+                redraw.left = min(x,nx) - rad;
+                redraw.right = max(x,ny) + rad;
+                redraw.top = min(y,ny) - rad;
+                redraw.bottom = max(y,ny) + rad;
+
+                FCState::selected->setPos(x, y);
+                InvalidateRect(hWnd, &redraw, TRUE);
+            }
+            else {
+                //TODO drag background
+            }
+        }
+        
+    }
+    break;
+    case WM_LBUTTONUP:
+    {
+        InvalidateRect(hWnd, NULL, TRUE);
+        FCState::lButtonDown = false;
     }
     break;
     case WM_LBUTTONDBLCLK:
@@ -188,28 +248,32 @@ void getSizeContraint(LPARAM minMaxInfo) {
 void paint(HWND hWnd) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
-    
-    HFONT font = CreateFont(48, 0, 0, 0, 400,
-        FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-        CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
-        TEXT("Calibri"));
 
-    SelectFont(hdc, font);
+    SelectFont(hdc, FONT);
 
     for (Node* n : FCState::nodes) {
         POINT pos = n->getPos();
         HGDIOBJ orig = SelectObject(hdc, GetStockObject(DC_PEN));
-        HBRUSH selectBrush = CreateSolidBrush(RGB(255,255,0));
-        HBRUSH deselectBrush = CreateSolidBrush(RGB(255,255,255));
         
         
         if (n == FCState::selected) {
-            SelectObject(hdc, selectBrush);
+            if (FCState::selected->getFulfilled()) {
+                SelectObject(hdc, completeSelected);
+            }
+            else {
+                SelectObject(hdc, selected);
+            }
+            
             drawCircle(hdc, pos, n->getRadius());
-            SelectObject(hdc, deselectBrush);
+            //Draw arrows to connected nodes
+            SelectObject(hdc, deselected);
         }
         else {
+            if (n->getFulfilled()) {
+                SelectObject(hdc, complete);
+            }
             drawCircle(hdc, pos, n->getRadius());
+            SelectObject(hdc, deselected);
         }
     }
     
@@ -257,4 +321,8 @@ Node* checkClickedNode(LPARAM lParam) {
 
     SendMessage(hNodeInfo, WM_UPDATESELECTION, 0, (LPARAM)FCState::selected);
     return FCState::selected;
+}
+
+void drawArrow(HDC& hdc, const Node& p1, const Node& p2) {
+
 }

@@ -23,6 +23,12 @@ void Node::setFulfilled(bool f) {
 		complete = true;
 	}
 }
+bool Node::getFulfilled() const {
+	return complete;
+}
+void Node::toggleFulfilled() {
+	complete = !complete;
+}
 
 bool Node::areReqsFilled() {
 	for (Node* n : required) {
@@ -37,6 +43,7 @@ void Node::addReq(Node* n) {
 	int i = reqExists(n);
 	if (i == -1) {
 		required.push_back(n);
+		n->addFulfill(this);
 	}
 }
 
@@ -44,6 +51,7 @@ void Node::removeReq(Node* n) {
 	int i = reqExists(n);
 	if (i != -1) {
 		required.erase(required.begin() + i);
+		n->removeFulfill(this);
 	}
 }
 
@@ -84,6 +92,15 @@ const POINT& Node::getPos() const {
 	return pos;
 }
 
+LPRECT Node::getBoundingRect() const {
+	RECT bounds;
+	bounds.left = pos.x - radius;
+	bounds.right = pos.x + radius;
+	bounds.top = pos.y - radius;
+	bounds.bottom = pos.y + radius;
+	return &bounds;
+}
+
 int Node::getRadius() const {
 	return radius;
 }
@@ -106,4 +123,9 @@ std::wstring Node::getDesc() const {
  }
  const std::vector<Node*>& Node::getFulfills() const {
 	 return fulfills;
+ }
+
+ void Node::setPos(int x, int y) {
+	 pos.x = x;
+	 pos.y = y;
  }

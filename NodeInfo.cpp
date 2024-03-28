@@ -18,12 +18,16 @@ void updateNodeFields(HWND, LONG);
 std::wstring windowTextToStr(HWND);
 
 HWND editButton = nullptr;
+const LONG editBtnId = 3;
+
+HWND completeButton = nullptr;
+const LONG completeBtnId = 4;
 
 HWND editName = nullptr;
-LONG editNameId = 1;
+const LONG editNameId = 1;
 
 HWND editDesc = nullptr;
-LONG editDescId = 2;
+const LONG editDescId = 2;
 
 HWND markComplete = nullptr;
 bool editing = false;
@@ -63,12 +67,21 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		WORD notiCode = HIWORD(wParam);
 		switch (notiCode) {
 		case BN_CLICKED:
-			
-			RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
-			editing = !editing;
-			Edit_SetText(editName, (LPTSTR)FCState::selected->getName().c_str());
-			Edit_SetText(editDesc, (LPTSTR)FCState::selected->getDesc().c_str());
-			
+			switch ((int)LOWORD(wParam)) {
+			case editBtnId:
+				RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
+				editing = !editing;
+				Edit_SetText(editName, (LPTSTR)FCState::selected->getName().c_str());
+				Edit_SetText(editDesc, (LPTSTR)FCState::selected->getDesc().c_str());
+				break;
+			case completeBtnId: // Update node completion and also the visuals in the parent window
+				if (FCState::selected != nullptr) {
+					FCState::selected->toggleFulfilled();
+					HWND hFlowChart = GetParent(hWnd);
+					RedrawWindow(hFlowChart, FCState::selected->getBoundingRect(), NULL, RDW_INVALIDATE);
+				}
+				break;
+			}
 			break;
 		case EN_CHANGE:
 		{
@@ -85,6 +98,8 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 }
 
 void nodeInfoPaint(HWND hWnd) {
+	InvalidateRect(hWnd, NULL, TRUE);
+
 	Node* selected = FCState::selected;
 	PAINTSTRUCT ps;
 	HDC hdc = BeginPaint(hWnd, &ps);
@@ -110,16 +125,21 @@ void nodeInfoPaint(HWND hWnd) {
 
 	if (selected == nullptr) {
 		ShowWindow(editButton, SW_HIDE);
+		ShowWindow(completeButton, SW_HIDE);
 		ShowWindow(editName, SW_HIDE);
 		ShowWindow(editDesc, SW_HIDE);
 		Button_Enable(editButton, FALSE);
+		Button_Enable(completeButton, SW_HIDE);
 		Edit_Enable(editName, FALSE);
 		Edit_Enable(editDesc, FALSE);
+
 
 		drawLines(hdc, L"None Selected", textRect);
 		EndPaint(hWnd, &ps);
 		return;
 	}
+	ShowWindow(completeButton, SW_SHOW);
+	Button_Enable(completeButton, TRUE);
 
 	int nameSpot = textRect.top;
 	int descSpot;
@@ -182,7 +202,9 @@ void nodeInfoPaint(HWND hWnd) {
 	else {
 		//not editing, just draw
 		ShowWindow(editButton, SW_SHOW);
+		ShowWindow(completeButton, SW_SHOW);
 		Button_Enable(editButton, TRUE);
+		Button_Enable(completeButton, TRUE);
 		
 		drawLines(hdc, selected->getName(), textRect);
 		textRect.top += lineSize;
@@ -192,7 +214,7 @@ void nodeInfoPaint(HWND hWnd) {
 		textRect.top += lineSize;
 
 		if (selected->getReqs().size() != 0) {
-			drawLines(hdc, L"Requirements:", textRect);
+			drawLines(hdc, L"Requires:", textRect);
 			for (Node* n : selected->getReqs()) {
 				drawLines(hdc, n->getName(), textRect);
 			}
@@ -223,13 +245,21 @@ HWND createNodeInfo(HINSTANCE hInst, HWND hParent) {
 		errorHandler((LPTSTR)_T("CreateWindowEx"));
 	}
 
-
-
 	editButton = CreateWindowEx(0,
 		_T("BUTTON"),
 		_T("Edit"),
 		WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
 		30, 5, 50, 25,
+		hNodeInfo,
+		NULL,
+		hInst,
+		NULL
+	);
+	completeButton = CreateWindowEx(0,
+		_T("BUTTON"),
+		_T("Complete"),
+		WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+		90, 5, 90, 25,
 		hNodeInfo,
 		NULL,
 		hInst,
@@ -261,6 +291,8 @@ HWND createNodeInfo(HINSTANCE hInst, HWND hParent) {
 	);
 	SetWindowLong(editName, GWL_ID, editNameId);
 	SetWindowLong(editDesc, GWL_ID, editDescId);
+	SetWindowLong(editButton, GWL_ID, editBtnId);
+	SetWindowLong(completeButton, GWL_ID, completeBtnId);
 
 	SendMessage(editName, WM_SETFONT, (WPARAM)FONT, NULL);
 	SendMessage(editDesc, WM_SETFONT, (WPARAM)FONT, NULL);
@@ -283,7 +315,7 @@ void updateNodeFields(HWND hWnd, LONG id){
 		MessageBoxW(NULL, L"updateNodeFields: unknown ID", L"Error", MB_YESNO);
 		return;
 	}
-	InvalidateRect(hWnd, NULL, TRUE);
+	
 	RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
 }
 

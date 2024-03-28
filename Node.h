@@ -8,11 +8,16 @@ public:
 	Node(POINT);
 	
 	void setFulfilled(bool);
+	bool getFulfilled() const; 
+	void toggleFulfilled();
+
 	bool areReqsFilled();
 	void addReq(Node*);
 	void removeReq(Node*);
+
 	const POINT& getPos() const;
 	int getRadius() const;
+	LPRECT getBoundingRect() const;
 
 	std::wstring getName() const;
 	std::wstring getDesc() const;
@@ -21,6 +26,8 @@ public:
 
 	const std::vector<Node*>& getReqs() const;
 	const std::vector<Node*>& getFulfills() const;
+
+	void setPos(int, int);
 
 private:
 	
