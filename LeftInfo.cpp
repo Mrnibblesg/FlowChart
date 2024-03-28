@@ -5,6 +5,7 @@
 #include <cmath>
 #include <sstream>
 #include <windowsx.h>
+#include "FCState.h"
 
 
 LRESULT CALLBACK LeftInfoProc(HWND, UINT, WPARAM, LPARAM);
@@ -68,7 +69,7 @@ void paintLeftInfo(HWND hWnd) {
 
     //Magic numbs for testing. Moving a string to a TCHAR is annoying as hell
     std::wstringstream percentageStream;
-    percentageStream << _T("Complete: ") << std::round(36.0 / 100) << _T("%");
+    percentageStream << _T("Complete: ") << std::round(FCState::completionPercent()) << _T("%");
 
     TCHAR description[] = _T("Description: This is a flowchart description. Use it to describe your flowchart, and what the end of the flowchart means.");
     

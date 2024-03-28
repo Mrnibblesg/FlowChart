@@ -78,7 +78,9 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 				if (FCState::selected != nullptr) {
 					FCState::selected->toggleFulfilled();
 					HWND hFlowChart = GetParent(hWnd);
-					RedrawWindow(hFlowChart, FCState::selected->getBoundingRect(), NULL, RDW_INVALIDATE);
+					HWND leftInfo = GetWindow(hFlowChart, GW_HWNDLAST);
+					RedrawWindow(hFlowChart, NULL, NULL, RDW_INVALIDATE);
+					RedrawWindow(leftInfo, NULL, NULL, RDW_INVALIDATE);
 				}
 				break;
 			}

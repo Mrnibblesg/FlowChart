@@ -9,4 +9,5 @@ public:
     static Node* connectBegin;
     static bool lButtonDown;
     static POINT globalOffset;
+    static double completionPercent();
 };

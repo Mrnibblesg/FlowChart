@@ -17,7 +17,11 @@ Node::Node(POINT p) {
 void Node::setFulfilled(bool f) {
 	if (!f) {
 		complete = false;
-		//notify fulfilling
+		for (Node* n : fulfills) {
+			if (n->complete) {
+				n->setFulfilled(false);
+			}
+		}
 	}
 	else if (areReqsFilled()) {
 		complete = true;
@@ -27,7 +31,7 @@ bool Node::getFulfilled() const {
 	return complete;
 }
 void Node::toggleFulfilled() {
-	complete = !complete;
+	setFulfilled(!complete);
 }
 
 bool Node::areReqsFilled() {
@@ -44,6 +48,9 @@ void Node::addReq(Node* n) {
 	if (i == -1) {
 		required.push_back(n);
 		n->addFulfill(this);
+	}
+	else {
+		removeReq(n);
 	}
 }
 

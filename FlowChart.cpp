@@ -10,6 +10,7 @@
 #include <vector>
 #include "FCState.h"
 
+
 #define WM_UPDATESELECTION (WM_USER+0)
 
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
@@ -20,8 +21,10 @@ LRESULT command(HWND, UINT, WPARAM, LPARAM);
 void createNode(HWND, LPARAM);
 void drawCircle(const HDC&, const POINT&, int);
 Node* checkClickedNode(LPARAM);
+
 void drawArrow(const HDC&, const Node&, const Node&);
 
+const double PI = std::atan(1.0) * 4;
 
 const HFONT FONT = CreateFont(48, 0, 0, 0, 400,
     FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
@@ -32,6 +35,8 @@ const HBRUSH deselected = CreateSolidBrush(RGB(255, 255, 255));
 const HBRUSH selected = CreateSolidBrush(RGB(255, 255, 0));
 const HBRUSH complete = CreateSolidBrush(RGB(0, 255, 0));
 const HBRUSH completeSelected = CreateSolidBrush(RGB(43, 121, 255));
+
+//const HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
 
 
 HINSTANCE hInst;
@@ -106,7 +111,7 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
             rightClicked->addReq(FCState::connectBegin);
             FCState::selected = rightClicked;
-            RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+            InvalidateRect(hWnd, NULL, TRUE);
         }
         FCState::connectBegin = nullptr;
     }   
@@ -255,6 +260,10 @@ void paint(HWND hWnd) {
         POINT pos = n->getPos();
         HGDIOBJ orig = SelectObject(hdc, GetStockObject(DC_PEN));
         
+        //Arrows to this node
+        for (Node* req : n->getReqs()) {
+            drawArrow(hdc, *req, *n);
+        }
         
         if (n == FCState::selected) {
             if (FCState::selected->getFulfilled()) {
@@ -265,7 +274,6 @@ void paint(HWND hWnd) {
             }
             
             drawCircle(hdc, pos, n->getRadius());
-            //Draw arrows to connected nodes
             SelectObject(hdc, deselected);
         }
         else {
@@ -323,6 +331,34 @@ Node* checkClickedNode(LPARAM lParam) {
     return FCState::selected;
 }
 
-void drawArrow(HDC& hdc, const Node& p1, const Node& p2) {
+//arrow from p1 to p2
+void drawArrow(const HDC& hdc, const Node& n1, const Node& n2) {
+    POINT n1Pos = n1.getPos();
+    POINT n2Pos = n2.getPos();
+    double dy = n2Pos.y - n1.getPos().y;
+    double dx = n2Pos.x - n1.getPos().x;
+    double angle = std::atan2(dy,dx);
+    double lineLen = std::sqrt(dx * dx + dy * dy) - n1.getRadius() - n2.getRadius();
 
+    int startX = n1Pos.x + std::cos(angle) * n1.getRadius();
+    int startY = n1Pos.y + std::sin(angle) * n1.getRadius();
+    int endX = n1Pos.x + std::cos(angle) * (lineLen + n1.getRadius());
+    int endY = n1Pos.y + std::sin(angle) * (lineLen + n1.getRadius());
+
+    MoveToEx(hdc, startX, startY, NULL);
+    LineTo(hdc, endX, endY);
+
+    //Draw the 2 little fin arrow fin things, +- 20 degrees
+    double spread = 25 * PI / 180;
+    int finLength = 20;
+    int finEndX = endX - std::cos(angle + spread) * finLength;
+    int finEndY = endY - std::sin(angle + spread) * finLength;
+
+    LineTo(hdc, finEndX, finEndY);
+    MoveToEx(hdc, endX, endY, NULL);
+
+    finEndX = endX - std::cos(angle - spread) * finLength;
+    finEndY = endY - std::sin(angle - spread) * finLength;
+
+    LineTo(hdc, finEndX, finEndY);
 }
