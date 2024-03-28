@@ -21,3 +21,18 @@ double FCState::completionPercent() {
 	}
 	return complete / total * 100;
 }
+
+void FCState::deleteNode(Node* del) {
+	for (Node* n : del->getReqs()) {
+		del->removeReq(n);
+	}
+	for (Node* n : del->getFulfills()) {
+		n->removeReq(del);
+	}
+	for (int i = 0; i < nodes.size(); i++) {
+		if (nodes.at(i) == del) {
+			nodes.erase(nodes.begin() + i);
+		}
+	}
+	
+}

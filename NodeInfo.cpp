@@ -23,6 +23,9 @@ const LONG editBtnId = 3;
 HWND completeButton = nullptr;
 const LONG completeBtnId = 4;
 
+HWND deleteButton = nullptr;
+const LONG deleteBtnId = 5;
+
 HWND editName = nullptr;
 const LONG editNameId = 1;
 
@@ -83,6 +86,14 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 					RedrawWindow(leftInfo, NULL, NULL, RDW_INVALIDATE);
 				}
 				break;
+			case deleteBtnId:
+				if (FCState::selected != nullptr) {
+					FCState::deleteNode(FCState::selected);
+					HWND hFlowChart = GetParent(hWnd);
+					HWND leftInfo = GetWindow(hFlowChart, GW_HWNDLAST);
+					InvalidateRect(hFlowChart, NULL, TRUE);
+					RedrawWindow(leftInfo, NULL, NULL, RDW_INVALIDATE);
+				}
 			}
 			break;
 		case EN_CHANGE:
@@ -131,7 +142,7 @@ void nodeInfoPaint(HWND hWnd) {
 		ShowWindow(editName, SW_HIDE);
 		ShowWindow(editDesc, SW_HIDE);
 		Button_Enable(editButton, FALSE);
-		Button_Enable(completeButton, SW_HIDE);
+		Button_Enable(completeButton, FALSE);
 		Edit_Enable(editName, FALSE);
 		Edit_Enable(editDesc, FALSE);
 
@@ -267,6 +278,16 @@ HWND createNodeInfo(HINSTANCE hInst, HWND hParent) {
 		hInst,
 		NULL
 	);
+	deleteButton = CreateWindowEx(0,
+		_T("BUTTON"),
+		_T("Delete"),
+		WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+		190, 5, 70, 25,
+		hNodeInfo,
+		NULL,
+		hInst,
+		NULL
+	);
 	
 	DWORD textStyles = WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER |
 		ES_WANTRETURN | ES_MULTILINE | ES_AUTOVSCROLL;
@@ -295,6 +316,7 @@ HWND createNodeInfo(HINSTANCE hInst, HWND hParent) {
 	SetWindowLong(editDesc, GWL_ID, editDescId);
 	SetWindowLong(editButton, GWL_ID, editBtnId);
 	SetWindowLong(completeButton, GWL_ID, completeBtnId);
+	SetWindowLong(deleteButton, GWL_ID, deleteBtnId);
 
 	SendMessage(editName, WM_SETFONT, (WPARAM)FONT, NULL);
 	SendMessage(editDesc, WM_SETFONT, (WPARAM)FONT, NULL);

@@ -35,7 +35,6 @@ ATOM registerLeftInfo(HINSTANCE hInst) {
 }
 
 LRESULT CALLBACK LeftInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-    int resp;
     switch (message) {
     case WM_PAINT:
         paintLeftInfo(hWnd);
@@ -67,7 +66,6 @@ void paintLeftInfo(HWND hWnd) {
     TCHAR msg[] = _T("Hello World");
     TCHAR title[] = _T("Flowchart title");
 
-    //Magic numbs for testing. Moving a string to a TCHAR is annoying as hell
     std::wstringstream percentageStream;
     percentageStream << _T("Complete: ") << std::round(FCState::completionPercent()) << _T("%");
 

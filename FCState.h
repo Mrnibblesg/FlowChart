@@ -10,4 +10,5 @@ public:
     static bool lButtonDown;
     static POINT globalOffset;
     static double completionPercent();
+    static void deleteNode(Node*);
 };
