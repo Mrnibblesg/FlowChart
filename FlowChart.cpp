@@ -9,6 +9,7 @@
 #include <cmath>
 #include <vector>
 #include "FCState.h"
+#include "SaveLoad.h"
 
 
 #define WM_UPDATESELECTION (WM_USER+0)
@@ -217,6 +218,26 @@ LRESULT command(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     {
     case IDM_ABOUT:
         DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+        break;
+        //Save: saves to file predetermined by file name, unless no file was loaded upon starting the program.
+        // In which case, use a save as prompt.
+        //Load: open file selector to select new file, ask user if they would like to save first
+        //new: new file, ask user for name of file
+    case ID_FILE_SAVE:
+        if (FCState::loaded) {
+            //save normally
+            //save();
+        }
+        else {
+            //prompt for save as
+            saveAs(hWnd);
+        }
+        break;
+    case ID_FILE_LOAD:
+        load(hWnd);
+        break;
+    case ID_FILE_NEW:
+        saveAs(hWnd);
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);

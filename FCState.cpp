@@ -6,6 +6,11 @@ std::vector<Node*> FCState::nodes;
 Node* FCState::selected = nullptr;
 Node* FCState::connectBegin = nullptr;
 bool FCState::lButtonDown = false;
+bool FCState::loaded = false;
+std::wstring FCState::fileName;
+
+std::wstring FCState::title{ L"My flowchart" };
+std::wstring FCState::desc{ L"My description" };
 
 double FCState::completionPercent() {
 	double total = 0;
@@ -34,5 +39,4 @@ void FCState::deleteNode(Node* del) {
 			nodes.erase(nodes.begin() + i);
 		}
 	}
-	
 }

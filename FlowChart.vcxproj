@@ -137,6 +137,7 @@
     <ClInclude Include="Node.h" />
     <ClInclude Include="NodeInfo.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SaveLoad.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
@@ -147,6 +148,7 @@
     <ClCompile Include="FlowChart.cpp" />
     <ClCompile Include="NodeInfo.cpp" />
     <ClCompile Include="Node.cpp" />
+    <ClCompile Include="SaveLoad.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FlowChart.rc" />

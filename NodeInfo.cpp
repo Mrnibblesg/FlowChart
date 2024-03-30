@@ -17,25 +17,25 @@ void drawLines(HDC, std::wstring, RECT&);
 void updateNodeFields(HWND, LONG);
 std::wstring windowTextToStr(HWND);
 
-HWND editButton = nullptr;
+static HWND editButton = nullptr;
 const LONG editBtnId = 3;
 
-HWND completeButton = nullptr;
+static HWND completeButton = nullptr;
 const LONG completeBtnId = 4;
 
-HWND deleteButton = nullptr;
+static HWND deleteButton = nullptr;
 const LONG deleteBtnId = 5;
 
-HWND editName = nullptr;
+static HWND editName = nullptr;
 const LONG editNameId = 1;
 
-HWND editDesc = nullptr;
+static HWND editDesc = nullptr;
 const LONG editDescId = 2;
 
-HWND markComplete = nullptr;
-bool editing = false;
+static HWND markComplete = nullptr;
+static bool editing = false;
 
-const HFONT FONT = CreateFont(30, 0, 0, 0, 400,
+static const HFONT FONT = CreateFont(30, 0, 0, 0, 400,
 	FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
 	CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
 	TEXT("Calibri"));
@@ -72,10 +72,10 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		case BN_CLICKED:
 			switch ((int)LOWORD(wParam)) {
 			case editBtnId:
-				RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
 				editing = !editing;
 				Edit_SetText(editName, (LPTSTR)FCState::selected->getName().c_str());
 				Edit_SetText(editDesc, (LPTSTR)FCState::selected->getDesc().c_str());
+				RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
 				break;
 			case completeBtnId: // Update node completion and also the visuals in the parent window
 				if (FCState::selected != nullptr) {
@@ -139,10 +139,12 @@ void nodeInfoPaint(HWND hWnd) {
 	if (selected == nullptr) {
 		ShowWindow(editButton, SW_HIDE);
 		ShowWindow(completeButton, SW_HIDE);
+		ShowWindow(deleteButton, SW_HIDE);
 		ShowWindow(editName, SW_HIDE);
 		ShowWindow(editDesc, SW_HIDE);
 		Button_Enable(editButton, FALSE);
 		Button_Enable(completeButton, FALSE);
+		Button_Enable(deleteButton, FALSE);
 		Edit_Enable(editName, FALSE);
 		Edit_Enable(editDesc, FALSE);
 
@@ -152,7 +154,9 @@ void nodeInfoPaint(HWND hWnd) {
 		return;
 	}
 	ShowWindow(completeButton, SW_SHOW);
+	ShowWindow(deleteButton, SW_SHOW);
 	Button_Enable(completeButton, TRUE);
+	Button_Enable(deleteButton, TRUE);
 
 	int nameSpot = textRect.top;
 	int descSpot;
@@ -165,13 +169,7 @@ void nodeInfoPaint(HWND hWnd) {
 		Edit_Enable(editName, TRUE);
 		Edit_Enable(editDesc, TRUE);
 
-		SIZE textSize;
-		RECT rect;
-		GetClientRect(hWnd, &rect);
-
 		//Set props of the name edit control
-		GetTextExtentPoint(hdc, (LPTSTR)selected->getName().c_str(), _tcslen(selected->getName().c_str()), &textSize);
-		int lines = std::ceil((float)textSize.cx / (textWidth-3));
 		int boxHeight = lineSize * Edit_GetLineCount(editName);
 
 		//set edit control size and adjust remaining space
@@ -189,8 +187,6 @@ void nodeInfoPaint(HWND hWnd) {
 		drawLines(hdc, L"Description:", textRect);
 
 		//setEditControlHeight
-		GetTextExtentPoint(hdc, (LPTSTR)selected->getDesc().c_str(), _tcslen(selected->getDesc().c_str()), &textSize);
-		lines = std::ceil((float)textSize.cx / textWidth);
 		boxHeight = lineSize * Edit_GetLineCount(editDesc);
 
 		SetWindowPos(editDesc, NULL,
@@ -216,6 +212,10 @@ void nodeInfoPaint(HWND hWnd) {
 		//not editing, just draw
 		ShowWindow(editButton, SW_SHOW);
 		ShowWindow(completeButton, SW_SHOW);
+		ShowWindow(editName, SW_HIDE);
+		ShowWindow(editDesc, SW_HIDE);
+		Edit_Enable(editName, FALSE);
+		Edit_Enable(editDesc, FALSE);
 		Button_Enable(editButton, TRUE);
 		Button_Enable(completeButton, TRUE);
 		
@@ -324,10 +324,12 @@ HWND createNodeInfo(HINSTANCE hInst, HWND hParent) {
 	return hNodeInfo;
 }
 
-void drawLines(HDC hdc, std::wstring text, RECT& textRect) {
+static void drawLines(HDC hdc, std::wstring text, RECT& textRect) {
 	DWORD form = DT_LEFT | DT_NOCLIP | DT_WORDBREAK;
 	textRect.top += DrawTextEx(hdc, (LPTSTR)text.c_str(), -1, &textRect, form, NULL);
 }
+
+//Get the text from edit controls by ID and put them inside the corresponding node field.
 void updateNodeFields(HWND hWnd, LONG id){
 	if (id == GetWindowLong(editName, GWL_ID)) {
 		FCState::selected->setName(windowTextToStr(editName));
@@ -343,7 +345,7 @@ void updateNodeFields(HWND hWnd, LONG id){
 	RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
 }
 
-std::wstring windowTextToStr(HWND hWnd) {
+static std::wstring windowTextToStr(HWND hWnd) {
 	TCHAR buf[4096];
 	GetWindowText(hWnd, buf, 4096);
 	std::wstring str;
