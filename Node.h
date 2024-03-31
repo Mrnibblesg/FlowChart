@@ -29,10 +29,16 @@ public:
 
 	void setPos(int, int);
 
+	int getId() const; //for encoding
+	static Node* getNode(int ID, std::vector<Node*> list); //for decoding
+	
+
 private:
 	
 	std::wstring name = L"";
 	std::wstring desc = L"";
+	const int ID;
+
 	POINT pos;
 	int radius;
 	bool complete = false;
@@ -46,4 +52,5 @@ private:
 	//prevents dupes
 	int reqExists(Node*);
 	int fulfillExists(Node*);
+	static int count;
 };

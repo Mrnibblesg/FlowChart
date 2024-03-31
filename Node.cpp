@@ -1,18 +1,33 @@
 #include "Node.h"
 
-Node::Node() {
+int Node::count = 0;
+
+Node::Node(): ID{ Node::count } {
 	pos = {0,0};
 	radius = 30;
+	Node::count++;
 }
-Node::Node(POINT p) {
+Node::Node(POINT p): ID{ Node::count } {
 	pos = p;
 	radius = 30;
 	name = L"Test Node Name";
 	desc = L"Super duper long test node description to test the line-wrapping and height calculation capabilities.";
+	Node::count++;
 }
 
-//Set to true when all reqs are fulfilled, otherwise don't.
+Node* Node::getNode(int id, std::vector<Node*> list) {
+	for (Node* n : list) {
+		if (n->getId() == id) {
+			return n;
+		}
+	}
+	return nullptr;
+}
+int Node::getId() const {
+	return ID;
+}
 
+//Set to true when all reqs are fulfilled, otherwise don't
 //Set to false anytime. Then notify fulfilling nodes to see if they need to change.
 void Node::setFulfilled(bool f) {
 	if (!f) {

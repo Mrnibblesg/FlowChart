@@ -11,7 +11,7 @@ public:
     static bool lButtonDown;
     static POINT globalOffset;
 
-    static bool loaded;
+    static bool fileSelected;
     static std::wstring fileName;
 
     static std::wstring title;
