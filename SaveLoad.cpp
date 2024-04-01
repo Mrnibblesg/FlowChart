@@ -25,7 +25,7 @@ void setupDialog(HWND hWnd, OPENFILENAME& ofn) {
 
     ofn.lStructSize = sizeof(OPENFILENAME);
     ofn.hwndOwner = hWnd;
-    ofn.lpstrFilter = _T("All Files (*.*)\0*.*\0FlowChart files (*.fc)\0*.fc\0");
+    ofn.lpstrFilter = _T("FlowChart files(*.fc)\0 * .fc\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrInitialDir = NULL;
     ofn.lpstrFileTitle = NULL;
@@ -256,16 +256,18 @@ std::wstring _encode(std::wstring str) {
         case '\0':
             //break x2
             goto end;
-        case '"':
-            result += L"\\\"";
-            break;
         case '\\':
             result += L"\\\\";
             break;
+        case '"':
         case ',':
         case '{':
         case '}':
-            result += L"\\" + c;
+        {
+            result += L"\\";
+            result += c;
+        }
+            
             break;
         default:
             result += c;
@@ -290,7 +292,6 @@ std::wstring decodeNextString(std::wifstream& ifs) {
         wchar_t c = ifs.get();
         switch (c) {
         case '\\':
-            ifs.ignore(1);
             if (ifs.good()){
                 result += ifs.get();
             }
