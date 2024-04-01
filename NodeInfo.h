@@ -3,3 +3,5 @@
 ATOM registerNodeInfo(HINSTANCE);
 
 HWND createNodeInfo(HINSTANCE, HWND);
+
+void updateTextFields();

@@ -10,8 +10,8 @@ Node::Node(): ID{ Node::count } {
 Node::Node(POINT p): ID{ Node::count } {
 	pos = p;
 	radius = 30;
-	name = L"Test Node Name";
-	desc = L"Super duper long test node description to test the line-wrapping and height calculation capabilities.";
+	name = L"Sample Name";
+	desc = L"Sample Description";
 	Node::count++;
 }
 Node::Node(std::wstring name, std::wstring desc, POINT p, int id, bool complete) :

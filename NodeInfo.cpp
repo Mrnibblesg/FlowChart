@@ -62,6 +62,7 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	switch (message) {
 	case WM_UPDATESELECTION:
 		editing = false;
+		updateTextFields();
 	case WM_PAINT:
 		nodeInfoPaint(hWnd);
 	break;
@@ -91,6 +92,7 @@ LRESULT CALLBACK NodeInfoProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 					FCState::deleteNode(FCState::selected);
 					HWND hFlowChart = GetParent(hWnd);
 					HWND leftInfo = GetWindow(hFlowChart, GW_HWNDLAST);
+					FCState::selected = nullptr;
 					InvalidateRect(hFlowChart, NULL, TRUE);
 					RedrawWindow(leftInfo, NULL, NULL, RDW_INVALIDATE);
 				}
@@ -153,8 +155,13 @@ void nodeInfoPaint(HWND hWnd) {
 		EndPaint(hWnd, &ps);
 		return;
 	}
+
 	ShowWindow(completeButton, SW_SHOW);
 	ShowWindow(deleteButton, SW_SHOW);
+	ShowWindow(editButton, SW_SHOW);
+	ShowWindow(editName, SW_SHOW);
+	ShowWindow(editDesc, SW_SHOW);
+	Button_Enable(editButton, TRUE);
 	Button_Enable(completeButton, TRUE);
 	Button_Enable(deleteButton, TRUE);
 
@@ -162,83 +169,80 @@ void nodeInfoPaint(HWND hWnd) {
 	int descSpot;
 	drawLines(hdc, L"Name:", textRect);
 
-	// TODO remake this section later to only use the textbox and simply set the border visibility.
 	if (editing){
-		ShowWindow(editName, SW_SHOW);
-		ShowWindow(editDesc, SW_SHOW);
 		Edit_Enable(editName, TRUE);
 		Edit_Enable(editDesc, TRUE);
+		LONG style = GetWindowLong(editName, GWL_STYLE);
+		style |= WS_BORDER;
 
-		//Set props of the name edit control
-		int boxHeight = lineSize * Edit_GetLineCount(editName);
-
-		//set edit control size and adjust remaining space
-		SetWindowPos(editName, NULL,
-			textRect.left-inPad,
-			textRect.top - 2,
-			textWidth + (2*inPad),
-			boxHeight + (inPad),
-			SWP_NOZORDER);
-
-		textRect.top += boxHeight + lineSize;
-
-		//Set up the description edit control.
-		descSpot = textRect.top;
-		drawLines(hdc, L"Description:", textRect);
-
-		//setEditControlHeight
-		boxHeight = lineSize * Edit_GetLineCount(editDesc);
-
-		SetWindowPos(editDesc, NULL,
-			textRect.left - inPad,
-			textRect.top-2,
-			textWidth + (2*inPad),
-			boxHeight + (inPad),
-			SWP_NOZORDER);
-
-		//Go back and redraw these lines because edit controls inexplicably overwrite them sometimes
-		int textReturnSpot = textRect.top;
-
-		textRect.top = nameSpot;
-		drawLines(hdc, L"Name:", textRect);
-
-		textRect.top = descSpot;
-		drawLines(hdc, L"Description:", textRect);
-		
-		textRect.top = textReturnSpot;
-		textRect.top += boxHeight + lineSize;
+		//SetWindowLong(editName, GWL_STYLE, style);
+		//SetWindowLong(editDesc, GWL_STYLE, style);
 	}
 	else {
-		//not editing, just draw
-		ShowWindow(editButton, SW_SHOW);
-		ShowWindow(completeButton, SW_SHOW);
-		ShowWindow(editName, SW_HIDE);
-		ShowWindow(editDesc, SW_HIDE);
 		Edit_Enable(editName, FALSE);
 		Edit_Enable(editDesc, FALSE);
-		Button_Enable(editButton, TRUE);
-		Button_Enable(completeButton, TRUE);
+		LONG style = GetWindowLong(editName, GWL_STYLE);
+
+		style &= ~WS_BORDER;
+
+		//SetWindowLong(editName, GWL_STYLE, style);
+		//SetWindowLong(editDesc, GWL_STYLE, style);
 		
-		drawLines(hdc, selected->getName(), textRect);
-		textRect.top += lineSize;
-		drawLines(hdc, L"Description:", textRect);
+	}
 
-		drawLines(hdc, selected->getDesc(), textRect);
-		textRect.top += lineSize;
+	//Set props of the name edit control
+	int boxHeight = lineSize * Edit_GetLineCount(editName);
 
-		if (selected->getReqs().size() != 0) {
-			drawLines(hdc, L"Requires:", textRect);
-			for (Node* n : selected->getReqs()) {
-				drawLines(hdc, n->getName(), textRect);
-			}
-		}
-		if (selected->getFulfills().size() != 0) {
-			drawLines(hdc, L"Fulfills:", textRect);
-			for (Node* n : selected->getFulfills()) {
-				drawLines(hdc, n->getName(), textRect);
-			}
+	//set edit control size and adjust remaining space
+	SetWindowPos(editName, NULL,
+		textRect.left - inPad,
+		textRect.top - 2,
+		textWidth + (2 * inPad),
+		boxHeight + (inPad),
+		SWP_NOZORDER);
+
+	textRect.top += boxHeight + lineSize;
+
+	//Set up the description edit control.
+	descSpot = textRect.top;
+	drawLines(hdc, L"Description:", textRect);
+
+	//setEditControlHeight
+	boxHeight = lineSize * Edit_GetLineCount(editDesc);
+
+	SetWindowPos(editDesc, NULL,
+		textRect.left - inPad,
+		textRect.top - 2,
+		textWidth + (2 * inPad),
+		boxHeight + (inPad),
+		SWP_NOZORDER);
+
+	//Go back and redraw these lines because edit controls inexplicably overwrite them sometimes
+	int textReturnSpot = textRect.top;
+
+	textRect.top = nameSpot;
+	drawLines(hdc, L"Name:", textRect);
+
+	textRect.top = descSpot;
+	drawLines(hdc, L"Description:", textRect);
+
+	textRect.top = textReturnSpot;
+	textRect.top += boxHeight + lineSize;
+
+	if (selected->getReqs().size() != 0) {
+		drawLines(hdc, L"Requires:", textRect);
+		for (Node* n : selected->getReqs()) {
+			drawLines(hdc, n->getName(), textRect);
 		}
 	}
+	if (selected->getFulfills().size() != 0) {
+		drawLines(hdc, L"Fulfills:", textRect);
+		for (Node* n : selected->getFulfills()) {
+			drawLines(hdc, n->getName(), textRect);
+		}
+	}
+
+
 
 	EndPaint(hWnd, &ps);
 }
@@ -289,12 +293,12 @@ HWND createNodeInfo(HINSTANCE hInst, HWND hParent) {
 		NULL
 	);
 	
-	DWORD textStyles = WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER |
+	DWORD textStyles = WS_TABSTOP | WS_CHILD | WS_BORDER |
 		ES_WANTRETURN | ES_MULTILINE | ES_AUTOVSCROLL;
 
 	editName = CreateWindowEx(0,
 		_T("EDIT"),
-		_T("EditName"),
+		_T("Sample Name"),
 		textStyles,
 		30, 35, 200, 80,
 		hNodeInfo,
@@ -304,7 +308,7 @@ HWND createNodeInfo(HINSTANCE hInst, HWND hParent) {
 	);
 	editDesc = CreateWindowEx(0,
 		_T("EDIT"),
-		_T("EditDesc"),
+		_T("Sample Description"),
 		textStyles,
 		30, 125, 200, 30,
 		hNodeInfo,
@@ -343,6 +347,13 @@ void updateNodeFields(HWND hWnd, LONG id){
 	}
 	
 	RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+}
+
+//sync the text boxes with the currently selected node
+void updateTextFields() {
+	if (FCState::selected == nullptr) return;
+	Edit_SetText(editName, FCState::selected->getName().c_str());
+	Edit_SetText(editDesc, FCState::selected->getDesc().c_str());
 }
 
 static std::wstring windowTextToStr(HWND hWnd) {

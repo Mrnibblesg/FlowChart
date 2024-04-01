@@ -99,6 +99,7 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
         if (rightClicked != nullptr) {
             FCState::connectBegin = rightClicked;
             FCState::selected = rightClicked;
+            updateTextFields();
             RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
         }
     }
@@ -112,6 +113,7 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
             rightClicked->addReq(FCState::connectBegin);
             FCState::selected = rightClicked;
+            updateTextFields();
             InvalidateRect(hWnd, NULL, TRUE);
         }
         FCState::connectBegin = nullptr;
@@ -307,6 +309,7 @@ void createNode(HWND hWnd, LPARAM lParam) {
     Node* newNode = new Node(p);
     FCState::nodes.push_back(newNode);
     FCState::selected = newNode;
+    updateTextFields();
     RedrawWindow(hWnd, 0, 0, RDW_INVALIDATE);
 }
 
