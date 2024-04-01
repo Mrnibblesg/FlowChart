@@ -6,7 +6,7 @@ std::vector<Node*> FCState::nodes;
 Node* FCState::selected = nullptr;
 Node* FCState::connectBegin = nullptr;
 bool FCState::lButtonDown = false;
-bool FCState::loaded = false;
+bool FCState::fileSelected = false;
 std::wstring FCState::fileName;
 
 std::wstring FCState::title{ L"My flowchart" };

@@ -335,7 +335,7 @@ void updateNodeFields(HWND hWnd, LONG id){
 		FCState::selected->setName(windowTextToStr(editName));
 	}
 	else if (id == GetWindowLong(editDesc, GWL_ID)) {
-		FCState::selected->setName(windowTextToStr(editDesc));
+		FCState::selected->setDesc(windowTextToStr(editDesc));
 	}
 	else {
 		MessageBoxW(NULL, L"updateNodeFields: unknown ID", L"Error", MB_YESNO);

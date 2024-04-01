@@ -6,6 +6,7 @@ class Node {
 public:
 	Node();
 	Node(POINT);
+	Node(std::wstring, std::wstring, POINT, int, bool);
 	
 	void setFulfilled(bool);
 	bool getFulfilled() const; 
@@ -31,7 +32,7 @@ public:
 
 	int getId() const; //for encoding
 	static Node* getNode(int ID, std::vector<Node*> list); //for decoding
-	
+	static void setCount(int);
 
 private:
 	

@@ -14,6 +14,17 @@ Node::Node(POINT p): ID{ Node::count } {
 	desc = L"Super duper long test node description to test the line-wrapping and height calculation capabilities.";
 	Node::count++;
 }
+Node::Node(std::wstring name, std::wstring desc, POINT p, int id, bool complete) :
+	name{ name },
+	desc{ desc },
+	pos{ p },
+	ID{ id },
+	complete{ complete },
+	radius{ 30 } {}
+
+void Node::setCount(int amt) {
+	count = amt + 1;
+}
 
 Node* Node::getNode(int id, std::vector<Node*> list) {
 	for (Node* n : list) {
