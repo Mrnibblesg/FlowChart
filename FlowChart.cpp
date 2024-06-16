@@ -128,13 +128,20 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     break;
     case WM_MOUSEMOVE:
     {
+        //Store the previous mouse cursor position for mouse drag calculations
+        static POINT prevPos;
+        static bool dragging = false;
+
         if (FCState::lButtonDown) {
+            
             Node* selected = FCState::selected;
+            int x = GET_X_LPARAM(lParam);
+            int y = GET_Y_LPARAM(lParam);
             if (selected != nullptr) {
                 int nx = selected->getPos().x;
                 int ny = selected->getPos().y;
-                int x = GET_X_LPARAM(lParam);
-                int y = GET_Y_LPARAM(lParam);
+                
+                
                 int rad = selected->getRadius()+1;
 
                 RECT redraw;
@@ -143,14 +150,30 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
                 redraw.top = min(y,ny) - rad;
                 redraw.bottom = max(y,ny) + rad;
 
-                FCState::selected->setPos(x, y);
+                FCState::selected->setPos(
+                    x+FCState::globalOffset.x,
+                    y+FCState::globalOffset.y
+                );
                 InvalidateRect(hWnd, &redraw, TRUE);
             }
-            else {
-                //TODO drag background
+            else if (dragging) {
+                POINT currentPos;
+                GetCursorPos((LPPOINT)&currentPos);
+
+                FCState::globalOffset.x -= currentPos.x - prevPos.x;
+                FCState::globalOffset.y -= currentPos.y - prevPos.y;
+                prevPos = currentPos;
+                InvalidateRect(hWnd, NULL, TRUE);
             }
+            if (!dragging) {
+                GetCursorPos((LPPOINT)&prevPos);
+                
+            }
+            dragging = true;
         }
-        
+        else {
+            dragging = false;
+        }
     }
     break;
     case WM_LBUTTONUP:
@@ -189,6 +212,9 @@ LRESULT CALLBACK FlowChartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
+
+
+
     return 0;
 }
 
@@ -271,6 +297,8 @@ void paint(HWND hWnd) {
 
     for (Node* n : FCState::nodes) {
         POINT pos = n->getPos();
+        pos.x -= FCState::globalOffset.x;
+        pos.y -= FCState::globalOffset.y;
         HGDIOBJ orig = SelectObject(hdc, GetStockObject(DC_PEN));
         
         //Arrows to this node
@@ -303,8 +331,8 @@ void paint(HWND hWnd) {
 
 void createNode(HWND hWnd, LPARAM lParam) {
     POINT p{
-        GET_X_LPARAM(lParam),
-        GET_Y_LPARAM(lParam)
+        GET_X_LPARAM(lParam) + FCState::globalOffset.x,
+        GET_Y_LPARAM(lParam) + FCState::globalOffset.y
     };
     Node* newNode = new Node(p);
     FCState::nodes.push_back(newNode);
@@ -331,6 +359,9 @@ Node* checkClickedNode(LPARAM lParam) {
     for (int i = FCState::nodes.size() - 1; i >= 0; i--) {
         Node* n = FCState::nodes.at(i);
         POINT pos = n->getPos();
+        pos.x -= FCState::globalOffset.x;
+        pos.y -= FCState::globalOffset.y;
+
         int rad = n->getRadius();
         int dx = pos.x - click.x;
         int dy = pos.y - click.y;
@@ -348,9 +379,15 @@ Node* checkClickedNode(LPARAM lParam) {
 //arrow from p1 to p2
 void drawArrow(const HDC& hdc, const Node& n1, const Node& n2) {
     POINT n1Pos = n1.getPos();
+    n1Pos.x -= FCState::globalOffset.x;
+    n1Pos.y -= FCState::globalOffset.y;
+
     POINT n2Pos = n2.getPos();
-    double dy = n2Pos.y - n1.getPos().y;
-    double dx = n2Pos.x - n1.getPos().x;
+    n2Pos.x -= FCState::globalOffset.x;
+    n2Pos.y -= FCState::globalOffset.y;
+
+    double dy = n2Pos.y - n1Pos.y;
+    double dx = n2Pos.x - n1Pos.x;
     double angle = std::atan2(dy,dx);
     double lineLen = std::sqrt(dx * dx + dy * dy) - n1.getRadius() - n2.getRadius();
 
@@ -359,8 +396,15 @@ void drawArrow(const HDC& hdc, const Node& n1, const Node& n2) {
     int endX = n1Pos.x + std::cos(angle) * (lineLen + n1.getRadius());
     int endY = n1Pos.y + std::sin(angle) * (lineLen + n1.getRadius());
 
-    MoveToEx(hdc, startX, startY, NULL);
-    LineTo(hdc, endX, endY);
+    MoveToEx(hdc,
+        startX,
+        startY,
+        NULL
+    );
+    LineTo(hdc,
+        endX,
+        endY
+    );
 
     //Draw the 2 little fin arrow fin things, +- 20 degrees
     double spread = 25 * PI / 180;

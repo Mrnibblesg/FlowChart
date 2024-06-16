@@ -7,6 +7,7 @@ Node* FCState::selected = nullptr;
 Node* FCState::connectBegin = nullptr;
 bool FCState::lButtonDown = false;
 bool FCState::fileSelected = false;
+POINT FCState::globalOffset = *(new POINT{0,0});
 std::wstring FCState::fileName;
 
 std::wstring FCState::title{ L"My flowchart" };
